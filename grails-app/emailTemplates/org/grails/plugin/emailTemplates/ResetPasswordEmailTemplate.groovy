@@ -1,7 +1,7 @@
 package org.grails.plugin.emailTemplates
 
 
-import org.grails.plugin.emailTemplates.test.Person
+import org.grails.plugin.emailTemplates.test.EmailTemplatesPerson
 
 
 class ResetPasswordEmailTemplate extends EmailTemplate {
@@ -30,7 +30,7 @@ do not click on the link - instead, report the e-mail to us for investigation.
 The X-Men 
 '''
 
-  void send(Person person) {
+  void send(EmailTemplatesPerson person) {
     def resetPasswordLink = g.createLink(controller:'login', action:'changePassword', params:[tokenKey: 'XXXX'], absolute: true)
     sendEmail(person.email, [
       person: person.asDataMap(),
@@ -39,7 +39,7 @@ The X-Men
   }
 
   void sendTest(String recipient) {
-    def person = Person.buildWithoutSave(email:recipient)
+    def person = EmailTemplatesPerson.buildWithoutSave(email:recipient)
     send(person)
   }
     

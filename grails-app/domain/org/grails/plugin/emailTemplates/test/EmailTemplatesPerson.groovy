@@ -1,6 +1,6 @@
 package org.grails.plugin.emailTemplates.test
 
-class EmailTemplatePerson {
+class EmailTemplatesPerson {
 
   String firstName
   String lastName
