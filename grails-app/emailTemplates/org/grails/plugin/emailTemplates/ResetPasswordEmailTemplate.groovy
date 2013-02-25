@@ -6,9 +6,9 @@ import org.grails.plugin.emailTemplates.test.EmailTemplatesPerson
 
 class ResetPasswordEmailTemplate extends EmailTemplate {
 
-  String CODE = 'PASSWORD_ASSISTANCE' // could try generate code from class name
-  String name = 'Password assistance'
-  String description = 'Sent when users forget the password, and request help'
+  def listener = [topic: "passwordResetRequested", namespace: "emailTemplates"]
+
+  String name = 'Reset password test'
   String subject = 'Password assistance: how to reset your password'
   String body = '''
 Dear {{ person.first_name }},
@@ -30,17 +30,27 @@ do not click on the link - instead, report the e-mail to us for investigation.
 The X-Men 
 '''
 
-  void send(EmailTemplatesPerson person) {
-    def resetPasswordLink = g.createLink(controller:'login', action:'changePassword', params:[tokenKey: 'XXXX'], absolute: true)
-    sendEmail(person.email, [
+  Map buildScopes(person){
+    def resetPasswordLink = "http://localhost/changePassword?tokenKey=XXXX"
+    return [
       person: person.asDataMap(),
       reset_password_link: resetPasswordLink
-    ])
+    ]
   }
 
-  void sendTest(String recipient) {
-    def person = EmailTemplatesPerson.buildWithoutSave(email:recipient)
-    send(person)
+  def buildTestDataMessage(){
+    EmailTemplatesPerson.buildWithoutSave()
   }
     
+  Map dataKeys(){
+    [
+      person: EmailTemplatesPerson.dataKeys() ,
+      reset_password_link: null
+    ]
+  }
+
+  def getRecipients(person) {
+    person.email
+  }
+
 }
