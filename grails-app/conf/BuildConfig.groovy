@@ -35,16 +35,8 @@ grails.project.dependency.resolution = {
     compile ":platform-core:1.0.RC5"
     runtime ":hibernate:$grailsVersion"
 
-// For the UI. Have not yet made it platform-ui compatible.
-//    compile ":platform-ui:1.0.RC3"
-//    compile ":bootstrap-ui:1.0.RC4"
-//    compile(":bootstrap-theme:1.0.RC3") 
-//      excludes "bootstrap-ui"
-//    }
     compile ":resources:1.2.RC3" 
 
   }
 }
 
-//grails.plugin.location.bootstrapui="../grails-bootstrap-ui"
-//grails.plugin.location.bootstraptheme="../grails-bootstrap-theme"

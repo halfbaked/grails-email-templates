@@ -49,13 +49,14 @@ abstract class EmailTemplate {
 
   def sendEmail(String recipient, def scopes, def emailTemplateData) {
     log.debug "Sending email recipient $recipient, scopes $scopes, subject: $emailTemplateData.subject"
+    
     //def bccEmailsArray = email.bccEmails?.split(',')
     if(!(recipient ==~ /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,4}/)) {
       return
     } 
 
-    def bodyForMustache = markdown.markdownToHtml(emailTemplateData.body)
-    def bodyHtml = compileMustache(new StringReader(bodyForMustache), scopes)
+    def bodyForMarkdown = compileMustache(new StringReader(emailTemplateData.body), scopes)
+    def bodyHtml = markdown.markdownToHtml(bodyForMarkdown)
 
     try {
       mailService.sendMail {
@@ -68,6 +69,7 @@ abstract class EmailTemplate {
       log.error """
         Error sending email $name
         To: $recipient
+        $e
       """
     }
   }
@@ -97,7 +99,6 @@ abstract class EmailTemplate {
           log.error "Invalid returned from getRecipients ${recipients?.class.name}"                  
       }
     } catch (e) {
-      println "exception in send $e"
       log.debug "exception in send $e"      
     }
   }

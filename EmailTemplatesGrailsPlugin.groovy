@@ -3,13 +3,13 @@ import org.grails.plugin.emailTemplates.EmailTemplateArtefactHandler
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.1"
+  def version = "0.1.2"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
   def dependsOn = [:]
   def pluginExcludes = [
-    "grails-app/emailTemplates/*",
+    "grails-app/emailTemplates/org/grails/plugin/emailTemplates/ResetPasswordEmailTemplate.groovy",
     "grails-app/domain/org/grails/plugin/emailTemplates/test/*"
   ]
 
@@ -22,7 +22,7 @@ class EmailTemplatesGrailsPlugin {
 
   def documentation = "http://grails.org/plugin/email-templates"
   def license = "APACHE"
-  def developers = [ [ name: "Eamonn O'Connell", email: "eamonnoconnell@gmail.com" ]]
+  def developers = [ [ name: "Eamonn O'Connell", email: "eamonnoconnell@gmail.com" ] ]
   def issueManagement = [ system: "GIT", url: "https://github.com/halfbaked/grails-email-templates/issues" ]
   def scm = [ url: "https://github.com/halfbaked/grails-email-templates" ]
 
