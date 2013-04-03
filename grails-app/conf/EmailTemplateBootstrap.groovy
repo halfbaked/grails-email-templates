@@ -5,6 +5,7 @@ class EmailTemplateBootStrap {
 
   def grailsApplication
   def grailsEventsRegistry
+  def emailTemplatesService
 
   def init = { servletContext ->
     grailsApplication.emailTemplateClasses.each { emailTemplateClass ->
@@ -14,7 +15,7 @@ class EmailTemplateBootStrap {
       emailTemplate.persistEmailTemplateDataIfDoesNotExist()
       def listener = emailTemplate.listener 
       if (listener && listener.topic) { 
-        def sendMethod = emailTemplate.class.methods.find { it.name =~ /^send$/ }
+        def sendMethod = emailTemplate.class.methods.find { it.name =~ /^sendWithDataMessage$/ }
         grailsEventsRegistry.on (listener.namespace, listener.topic, emailTemplate, sendMethod)
       }
     }

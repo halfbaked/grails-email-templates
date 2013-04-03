@@ -50,7 +50,7 @@ The X-Men
   }
 
   def getRecipients(person) {
-    person.email
+    [[email:person.email, locale:person.locale]]
   }
 
 }

@@ -3,14 +3,15 @@ import org.grails.plugin.emailTemplates.EmailTemplateArtefactHandler
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.1.3"
+  def version = "0.1.4"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
   def dependsOn = [:]
   def pluginExcludes = [
     "grails-app/emailTemplates/org/grails/plugin/emailTemplates/ResetPasswordEmailTemplate.groovy",
-    "grails-app/domain/org/grails/plugin/emailTemplates/test/*"
+    "grails-app/domain/org/grails/plugin/emailTemplates/test/*",
+    "grails-app/conf/TestDataConfig.groovy"
   ]
 
   def title = "Email Templates" 
@@ -51,9 +52,6 @@ class EmailTemplatesGrailsPlugin {
            delegate.newInstance().asDataMap().keySet()
          }
       }
-      application.emailTemplateClasses.each { emailTemplateClass ->
-        emailTemplateClass.metaClass.g = new org.codehaus.groovy.grails.plugins.web.taglib.ApplicationTagLib()
-      }
     } catch (Exception e){
       println "Error $e"
     }
@@ -76,7 +74,12 @@ class EmailTemplatesGrailsPlugin {
     
   }
 
+  def doWithConfigOptions = {
+    'locale.default'(type: String, defaultValue: 'en')
+  }
+
   private generateShortBeanNameFromClass(def clazz) {
     clazz.shortName[0].toLowerCase() + clazz.shortName[1..-1]
   }
+
 }

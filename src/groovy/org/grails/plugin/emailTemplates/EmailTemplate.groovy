@@ -1,5 +1,9 @@
 package org.grails.plugin.emailTemplates
 
+
+import groovy.text.SimpleTemplateEngine
+
+
 abstract class EmailTemplate {
 
   /*
@@ -47,30 +51,40 @@ abstract class EmailTemplate {
    */ 
   def listener
 
-  def sendEmail(String recipient, def scopes, def emailTemplateData) {
-    log.debug "Sending email recipient $recipient, scopes $scopes, subject: $emailTemplateData.subject"
-    
-    //def bccEmailsArray = email.bccEmails?.split(',')
-    if(!(recipient ==~ /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,4}/)) {
+  def sendEmail(String recipientEmail, def scopes, def emailTemplateData) {
+    log.error "Sending email recipient $recipientEmail, scopes $scopes, subject: ${emailTemplateData?.subject}"
+    if (!recipientEmail || !emailTemplateData) {
+      log.warn """
+        Could not send mail. Invalid arguments. 
+        recipientEmail: $recipientEmail
+        emailTemplateData: $emailTemplateData
+      """
       return
-    } 
+    }
+    def bccEmailsArray = emailTemplateData.bccEmails?.split(',').findAll { isEmail(it) }
+    if(!isEmail(recipientEmail)) {
+      return
+    }
 
-    def bodyForMarkdown = compileMustache(new StringReader(emailTemplateData.body), scopes)
-    def bodyHtml = markdown.markdownToHtml(bodyForMarkdown)
-
+    def body = ""
+    def layout = emailTemplateData.layout ?: EmailTemplateLayout.findByDefaultLayout(true)
+    if (layout) {
+      def engine = new SimpleTemplateEngine()
+      body = engine.createTemplate(layout.body).make([emailContent: emailTemplateData.body]).toString()      
+    } else {
+      body = emailTemplateData.body
+    }
+    
+    body = compileMustache(new StringReader(body), scopes)
     try {
       mailService.sendMail {
-        to recipient
+        to recipientEmail
         subject emailTemplateData.subject
-        html bodyHtml
-//        if(bccEmailsArray){ bcc bccEmailsArray }
+        html body
+        if(bccEmailsArray){ bcc bccEmailsArray }
       } 
     } catch (e) {
-      log.error """
-        Error sending email $name
-        To: $recipient
-        $e
-      """
+      log.error("error sending email $name", e)
     }
   }
   
@@ -85,21 +99,26 @@ abstract class EmailTemplate {
   /* 
    * Sends an email given only the dataMessage. It will build everything else from the methods defined in the subclasses.
    */
-  void send(dataMessage) {
+  void sendWithDataMessage(dataMessage) {
     try {
-      def recipients = getRecipients(dataMessage)
-      switch(recipients) {
-        case String:
-          sendEmail(recipients, buildScopes(dataMessage), getTemplateData())
-          break
-        case List:
-          recipients.each { sendEmail(it, buildScopes(dataMessage), getTemplateData()) }
-          break
-        default:
-          log.error "Invalid returned from getRecipients ${recipients?.class.name}"                  
+      def scopes = buildScopes(dataMessage)
+      log.error "scopes built. getting recipients"
+      getRecipients(dataMessage).each { recipient ->
+        log.error "sending email for recipient $recipient"
+        def templateData = getTemplateData(recipient.locale)
+        log.error "template data retrieved"
+        sendEmail(recipient.email, scopes, getTemplateData(recipient.locale))
+        log.error "email sent"
       }
     } catch (e) {
-      log.debug "exception in send $e"      
+      log.error """
+        Error: exception in send $e 
+        $e.stackTrace
+        $e.message
+        $e.cause
+      """  
+      log.error("Error sending email $name",e)
+      //throw(e)
     }
   }
 
@@ -107,19 +126,24 @@ abstract class EmailTemplate {
    * Returns the persisted email template data from the database. Persisting this data to the database allows users to easily 
    * customize the email templates
    */
-  def getTemplateData() {
-    return EmailTemplateData.findByCode(getEmailCode())
+  def getTemplateData(Locale locale=null) {
+    def emailTemplateData = EmailTemplateData.findByCodeAndLocale(getEmailCode(), locale)
+    if (emailTemplateData) return emailTemplateData
+    else if (locale?.variant) return getTemplateData(new Locale(locale.getLanguage(), locale.getCountry()))    
+    else if (locale?.country) return getTemplateData(new Locale(locale.getLanguage()))
+    else return EmailTemplateData.findByCodeAndDefaultForCode(getEmailCode(), true)    
   }
 
   /*
    * Builds default template data object. 
    */
-  def createDefaultTemplate() {    
+  def createDefaultTemplate() {   
     new EmailTemplateData(
       code: getEmailCode(),
       name: name,
       subject: subject,
-      body: body
+      body: body,
+      defaultForCode: true
     )    
   }
 
@@ -147,6 +171,10 @@ abstract class EmailTemplate {
    */
   def getEmailCode() {
     this.class.name
+  }
+
+  private Boolean isEmail(String email) {
+    email ==~ /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,4}/
   }
 
 }

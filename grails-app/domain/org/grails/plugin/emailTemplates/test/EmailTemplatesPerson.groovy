@@ -5,6 +5,7 @@ class EmailTemplatesPerson {
   String firstName
   String lastName
   String email
+  Locale locale
 
   // Returns a map representation used in email templates
   Map asDataMap(){

@@ -14,7 +14,9 @@ grails.project.dependency.resolution = {
   }
   dependencies {
     runtime 'org.pegdown:pegdown:1.1.0',
-            'com.github.spullara.mustache.java:compiler:0.8.9' 
+            'com.github.spullara.mustache.java:compiler:0.8.10' 
+    compile 'org.codehaus.jackson:jackson-core-asl:1.8.3'
+    compile 'org.codehaus.jackson:jackson-mapper-asl:1.8.3'            
   }
 
   plugins {
@@ -31,12 +33,12 @@ grails.project.dependency.resolution = {
     // Build test data is a handy way of building the TestDataMessage,
     // but other projects don't have to use it.
     compile(":build-test-data:2.0.3") { export = false }
-    compile ":mail:1.0"     
+    compile ":mail:1.0"   
+    compile ":markdown:1.0.0.RC1"
     compile ":platform-core:1.0.RC5"
     runtime ":hibernate:$grailsVersion"
 
     compile ":resources:1.2.RC3" 
-
   }
 }
 
