@@ -3,11 +3,12 @@ import org.grails.plugin.emailTemplates.EmailTemplateArtefactHandler
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.2"
+  def version = "0.5"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
-  def dependsOn = [:]
+  def loadAfter = ['platformCore']
+
   def pluginExcludes = [
     "grails-app/emailTemplates/org/grails/plugin/emailTemplates/ResetPasswordEmailTemplate.groovy",
     "grails-app/domain/org/grails/plugin/emailTemplates/test/*",
@@ -18,7 +19,7 @@ class EmailTemplatesGrailsPlugin {
   def author = "Eamonn O'Connell"
   def authorEmail = "@34m0"
   def description = '''
-    Quickly and easily use markdown and mustache in your emails
+    Quickly and easy email templates
   '''
 
   def documentation = "http://grails.org/plugin/email-templates"
@@ -36,12 +37,26 @@ class EmailTemplatesGrailsPlugin {
       def beanName = emailTemplateClass.fullName
       "$beanName"(emailTemplateClass.clazz) { bean ->
         bean.autowire = true
-        markdown = new org.pegdown.PegDownProcessor()
         mustache = new com.github.mustachejava.DefaultMustacheFactory()
       }
       def shortBeanName = generateShortBeanNameFromClass(emailTemplateClass)
       springConfig.addAlias shortBeanName, beanName 
     }      
+  }
+
+  def doWithApplicationContext = { appCtx ->
+    application.emailTemplateClasses.each { emailTemplateClass ->
+      log.error "Processing $emailTemplateClass"
+      if (emailTemplateClass.isAbstract()) return
+      def beanName = generateBeanNameFromClass(emailTemplateClass)
+      def emailTemplate = appCtx.getBean(beanName)
+      emailTemplate.persistEmailTemplateDataIfDoesNotExist()
+      def listener = emailTemplate.listener 
+      if (listener && listener.topic) { 
+        def sendMethod = emailTemplate.class.methods.find { it.name =~ /^sendWithDataMessage$/ }
+        appCtx.grailsEventsRegistry.on (listener.namespace, listener.topic, emailTemplate, sendMethod)
+      }
+    }
   }
 
   def doWithDynamicMethods = { ctx ->
@@ -82,4 +97,8 @@ class EmailTemplatesGrailsPlugin {
     clazz.shortName[0].toLowerCase() + clazz.shortName[1..-1]
   }
 
+  private generateBeanNameFromClass(def clazz) {
+    clazz.fullName
+  }
+ 
 }

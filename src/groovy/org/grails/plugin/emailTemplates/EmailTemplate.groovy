@@ -52,7 +52,7 @@ abstract class EmailTemplate {
   def listener
 
   def sendEmail(String recipientEmail, def scopes, def emailTemplateData) {
-    log.error "Sending email recipient $recipientEmail, scopes $scopes, subject: ${emailTemplateData?.subject}"
+    log.info "Sending email recipient $recipientEmail, scopes $scopes, subject: ${emailTemplateData?.subject}"
     if (!recipientEmail || !emailTemplateData) {
       log.warn """
         Could not send mail. Invalid arguments. 
@@ -82,7 +82,8 @@ abstract class EmailTemplate {
         subject emailTemplateData.subject
         html body
         if(bccEmailsArray){ bcc bccEmailsArray }
-      } 
+      }
+      log.info "Email sent to $recipientEmail"
     } catch (e) {
       log.error("error sending email $name", e)
     }
@@ -104,11 +105,10 @@ abstract class EmailTemplate {
       def scopes = buildScopes(dataMessage)
       log.error "scopes built. getting recipients"
       getRecipients(dataMessage).each { recipient ->
-        log.error "sending email for recipient $recipient"
+        log.debug "sending email for recipient $recipient"
         def templateData = getTemplateData(recipient.locale)
-        log.error "template data retrieved"
+        log.debug "template data retrieved"
         sendEmail(recipient.email, scopes, getTemplateData(recipient.locale))
-        log.error "email sent"
       }
     } catch (e) {
       log.error """
@@ -152,9 +152,13 @@ abstract class EmailTemplate {
    * users are free to customize
    */
   def persistEmailTemplateDataIfDoesNotExist(){
-    if (!EmailTemplateData.findByCode(getEmailCode())) {
-      createDefaultTemplate().save(failOnError:true, flush:true)
-    } 
+    log.debug "persistEmailTemplateDataIfDoesNotExist where code is ${getEmailCode()}"
+    new EmailTemplateData().withTransaction {
+      if (!EmailTemplateData.findByCode(getEmailCode())) {      
+        createDefaultTemplate().save(failOnError:true, flush:true)
+        log.debug "EmailTemplateData did not exist. Persisting"      
+      } 
+    }
   }
 
   private def compileMustache(Reader reader, def scopes) {
