@@ -3,7 +3,7 @@ import org.grails.plugin.emailTemplates.EmailTemplateArtefactHandler
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.5"
+  def version = "0.6"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on

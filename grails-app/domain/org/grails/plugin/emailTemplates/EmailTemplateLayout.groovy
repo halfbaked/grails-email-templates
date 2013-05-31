@@ -3,6 +3,8 @@ package org.grails.plugin.emailTemplates
 
 class EmailTemplateLayout {
 
+  def grailsApplication
+
   Date dateCreated
   Date lastUpdated
 
@@ -13,6 +15,10 @@ class EmailTemplateLayout {
   static mapping = {
     body type:"text"
     sort dateCreated:'desc'
+  }
+
+  def mergeTags(){
+    grailsApplication.config.plugin.emailTemplates.defaultLayoutMergeTags ?: [:]
   }
 
 }
