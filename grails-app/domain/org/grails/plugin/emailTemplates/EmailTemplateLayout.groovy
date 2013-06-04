@@ -18,7 +18,7 @@ class EmailTemplateLayout {
   }
 
   def mergeTags(){
-    grailsApplication.config.plugin.emailTemplates.defaultLayoutMergeTags ?: [:]
+    grailsApplication.config.plugin?.emailTemplates?.defaultLayoutMergeTags ?: [:]
   }
 
 }

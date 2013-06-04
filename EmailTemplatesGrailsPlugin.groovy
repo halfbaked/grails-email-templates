@@ -1,9 +1,9 @@
 import org.grails.plugin.emailTemplates.EmailTemplateArtefactHandler
-
+import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.6"
+  def version = "0.8"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
@@ -31,30 +31,37 @@ class EmailTemplatesGrailsPlugin {
   def watchedResources = "field:./grails-app/emailTemplates/**/*EmailTemplate.groovy"
   def artefacts = [ EmailTemplateArtefactHandler ]
 
-  def doWithSpring = { ctx ->          
+  def doWithSpring = { ctx ->       
+    def disabledEmailTemplates = application.config.plugin?.emailTemplates?.disabledEmailTemplates
     application.emailTemplateClasses.each { emailTemplateClass ->           
       if (emailTemplateClass.isAbstract()) return
       def beanName = emailTemplateClass.fullName
-      "$beanName"(emailTemplateClass.clazz) { bean ->
-        bean.autowire = true
-        mustache = new com.github.mustachejava.DefaultMustacheFactory()
-      }
       def shortBeanName = generateShortBeanNameFromClass(emailTemplateClass)
-      springConfig.addAlias shortBeanName, beanName 
+      if (!disabledEmailTemplates || !disabledEmailTemplates.any{ it =~ beanName || it =~ shortBeanName}) {
+        "$beanName"(emailTemplateClass.clazz) { bean ->
+          bean.autowire = true
+          mustache = new com.github.mustachejava.DefaultMustacheFactory()
+        }
+        springConfig.addAlias shortBeanName, beanName 
+      }
     }      
   }
 
   def doWithApplicationContext = { appCtx ->
     application.emailTemplateClasses.each { emailTemplateClass ->
-      log.error "Processing $emailTemplateClass"
-      if (emailTemplateClass.isAbstract()) return
-      def beanName = generateBeanNameFromClass(emailTemplateClass)
-      def emailTemplate = appCtx.getBean(beanName)
-      emailTemplate.persistEmailTemplateDataIfDoesNotExist()
-      def listener = emailTemplate.listener 
-      if (listener && listener.topic) { 
-        def sendMethod = emailTemplate.class.methods.find { it.name =~ /^sendWithDataMessage$/ }
-        appCtx.grailsEventsRegistry.on (listener.namespace, listener.topic, emailTemplate, sendMethod)
+      try {
+        log.error "Processing $emailTemplateClass"
+        if (emailTemplateClass.isAbstract()) return
+        def beanName = generateBeanNameFromClass(emailTemplateClass)
+        def emailTemplate = appCtx.getBean(beanName)
+        emailTemplate.persistEmailTemplateDataIfDoesNotExist()
+        def listener = emailTemplate.listener 
+        if (listener && listener.topic) { 
+          def sendMethod = emailTemplate.class.methods.find { it.name =~ /^sendWithDataMessage$/ }
+          appCtx.grailsEventsRegistry.on (listener.namespace, listener.topic, emailTemplate, sendMethod)
+        }
+      } catch (NoSuchBeanDefinitionException e) {
+        log.warn("No bean registered for the emailTemplate artifact. It might be disabled", e)
       }
     }
   }
