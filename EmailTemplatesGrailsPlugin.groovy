@@ -1,9 +1,10 @@
 import org.grails.plugin.emailTemplates.EmailTemplateArtefactHandler
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
+
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.8"
+  def version = "0.8.2"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on

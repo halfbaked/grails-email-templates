@@ -2,6 +2,7 @@ package org.grails.plugin.emailTemplates
 
 
 import groovy.text.SimpleTemplateEngine
+import org.hibernate.FlushMode
 
 
 abstract class EmailTemplate {
@@ -45,6 +46,7 @@ abstract class EmailTemplate {
   def mailService
   def markdown
   def mustache
+  def sessionFactory
 
   /* 
    * If defined, the emailTemplate will become event driven, listening for the event, and sending the email.
@@ -53,6 +55,7 @@ abstract class EmailTemplate {
 
   def sendEmail(String recipientEmail, def scopes, def emailTemplateData) {
     log.info "Sending email recipient $recipientEmail, scopes $scopes, subject: ${emailTemplateData?.subject}"
+    sessionFactory?.currentSession?.setFlushMode(FlushMode.COMMIT)
     if (!recipientEmail || !emailTemplateData) {
       log.warn """
         Could not send mail. Invalid arguments. 
