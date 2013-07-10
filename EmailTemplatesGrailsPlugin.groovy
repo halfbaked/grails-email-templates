@@ -4,11 +4,11 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.8.2"
+  def version = "0.8.5"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
-  def loadAfter = ['platformCore']
+  def loadAfter = ['platformCore', 'database-migration']
 
   def pluginExcludes = [
     "grails-app/emailTemplates/org/grails/plugin/emailTemplates/ResetPasswordEmailTemplate.groovy",

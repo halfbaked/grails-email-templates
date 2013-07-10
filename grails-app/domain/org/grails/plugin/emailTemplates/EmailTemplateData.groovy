@@ -28,8 +28,8 @@ class EmailTemplateData {
   }
 
   static mapping = {
-    body type:'text'
-    sort dateCreated:'desc'
+    body type:"text"
+    sort "name"
   }
 
   def getEmail() {

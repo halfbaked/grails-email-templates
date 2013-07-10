@@ -14,7 +14,7 @@ class EmailTemplateLayout {
 
   static mapping = {
     body type:"text"
-    sort dateCreated:'desc'
+    sort "name" 
   }
 
   def mergeTags(){
