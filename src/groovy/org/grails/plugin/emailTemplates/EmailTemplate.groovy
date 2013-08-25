@@ -106,12 +106,12 @@ abstract class EmailTemplate {
   void sendWithDataMessage(dataMessage) {
     try {
       def scopes = buildScopes(dataMessage)
-      log.error "scopes built. getting recipients"
+      log.trace "scopes built. getting recipients"
       getRecipients(dataMessage).each { recipient ->
-        log.debug "sending email for recipient $recipient"
         def templateData = getTemplateData(recipient.locale)
-        log.debug "template data retrieved"
-        sendEmail(recipient.email, scopes, getTemplateData(recipient.locale))
+        if (templateData) {
+          sendEmail(recipient.email, scopes, getTemplateData(recipient.locale))
+        }
       }
     } catch (e) {
       log.error """
@@ -130,11 +130,11 @@ abstract class EmailTemplate {
    * customize the email templates
    */
   def getTemplateData(Locale locale=null) {
-    def emailTemplateData = EmailTemplateData.findByCodeAndLocale(getEmailCode(), locale)
+    def emailTemplateData = EmailTemplateData.findEnabledByCodeAndLocale(getEmailCode(), locale)
     if (emailTemplateData) return emailTemplateData
     else if (locale?.variant) return getTemplateData(new Locale(locale.getLanguage(), locale.getCountry()))    
     else if (locale?.country) return getTemplateData(new Locale(locale.getLanguage()))
-    else return EmailTemplateData.findByCodeAndDefaultForCode(getEmailCode(), true)    
+    else return EmailTemplateData.findEnabledByCodeAndDefaultForCode(getEmailCode(), true)    
   }
 
   /*
@@ -155,11 +155,10 @@ abstract class EmailTemplate {
    * users are free to customize
    */
   def persistEmailTemplateDataIfDoesNotExist(){
-    log.debug "persistEmailTemplateDataIfDoesNotExist where code is ${getEmailCode()}"
     new EmailTemplateData().withTransaction {
       if (!EmailTemplateData.findByCode(getEmailCode())) {      
         createDefaultTemplate().save(failOnError:true, flush:true)
-        log.debug "EmailTemplateData did not exist. Persisting"      
+        log.debug "EmailTemplateData [${getEmailCode()}] did not exist. Persisting"      
       } 
     }
   }

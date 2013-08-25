@@ -4,7 +4,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.8.6"
+  def version = "0.9"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
@@ -51,7 +51,7 @@ class EmailTemplatesGrailsPlugin {
   def doWithApplicationContext = { appCtx ->
     application.emailTemplateClasses.each { emailTemplateClass ->
       try {
-        log.error "Processing $emailTemplateClass"
+        log.trace "Processing $emailTemplateClass"
         if (emailTemplateClass.isAbstract()) return
         def beanName = generateBeanNameFromClass(emailTemplateClass)
         def emailTemplate = appCtx.getBean(beanName)
