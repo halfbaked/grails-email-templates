@@ -34,7 +34,6 @@ grails.project.dependency.resolution = {
     // but other projects don't have to use it.
     compile(":build-test-data:2.0.3") { export = false }
     compile ":mail:1.0"   
-    compile ":markdown:1.0.0.RC1"
     compile ":platform-core:1.0.RC5"
     runtime ":hibernate:$grailsVersion"
 

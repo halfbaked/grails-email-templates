@@ -28,6 +28,7 @@ class ResetPasswordEmailTemplateSpec extends IntegrationSpec {
       resetPasswordEmailTemplate.sendWithDataMessage(person)
 
     then:
+      greenMail.waitForIncomingEmail(500, 1)
       greenMail.getReceivedMessages().size() == 1
   }
 

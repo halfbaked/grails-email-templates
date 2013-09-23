@@ -79,6 +79,9 @@ abstract class EmailTemplate {
     }
     
     body = compileMustache(new StringReader(body), scopes)
+
+    body = ensureIsFullHtmlDocument(body)
+
     try {
       mailService.sendMail {
         to recipientEmail
@@ -179,8 +182,20 @@ abstract class EmailTemplate {
     this.class.name
   }
 
-  private Boolean isEmail(String email) {
+  static Boolean isEmail(String email) {
     email ==~ /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,4}/
+  }
+
+  // If no HTML tags add them, to better ensure the email does not end up in a spam folder - or worse
+  static String ensureIsFullHtmlDocument(String doc) {
+    if(!isFullHtmlDocument(doc)){
+      doc = "<html><head></head><body>$doc</body></html>"
+    }
+    doc
+  }
+
+  static Boolean isFullHtmlDocument(String document) {
+    document.trim().startsWith("<html>")
   }
 
 }
