@@ -4,7 +4,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.11"
+  def version = "0.12"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
@@ -12,6 +12,7 @@ class EmailTemplatesGrailsPlugin {
 
   def pluginExcludes = [
     "grails-app/emailTemplates/org/grails/plugin/emailTemplates/ResetPasswordEmailTemplate.groovy",
+    "grails-app/emailTemplates/org/grails/plugin/emailTemplates/ResetPasswordNoListenerDefinedEmailTemplate.groovy",
     "grails-app/domain/org/grails/plugin/emailTemplates/test/*",
     "grails-app/conf/TestDataConfig.groovy"
   ]
@@ -56,7 +57,7 @@ class EmailTemplatesGrailsPlugin {
         def beanName = generateBeanNameFromClass(emailTemplateClass)
         def emailTemplate = appCtx.getBean(beanName)
         emailTemplate.persistEmailTemplateDataIfDoesNotExist()
-        def listener = emailTemplate.listener 
+        def listener = emailTemplate.hasProperty("listener") ? emailTemplate.listener : null
         if (listener && listener.topic) { 
           def sendMethod = emailTemplate.class.methods.find { it.name =~ /^sendWithDataMessage$/ }
           appCtx.grailsEventsRegistry.on (listener.namespace, listener.topic, emailTemplate, sendMethod)

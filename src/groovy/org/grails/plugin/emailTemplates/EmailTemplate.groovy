@@ -49,9 +49,8 @@ abstract class EmailTemplate {
   def sessionFactory
 
   /* 
-   * If defined, the emailTemplate will become event driven, listening for the event, and sending the email.
-   */ 
-  def listener
+   * If a listener Map is defined, the emailTemplate will become event driven, listening for the event, and sending the email.
+   */
 
   def sendEmail(String recipientEmail, def scopes, def emailTemplateData) {
     log.info "Sending email recipient $recipientEmail, scopes $scopes, subject: ${emailTemplateData?.subject}"
@@ -105,9 +104,11 @@ abstract class EmailTemplate {
 
   /* 
    * Sends an email given only the dataMessage. It will build everything else from the methods defined in the subclasses.
+   * If the listener map defined a delay, the thread will sleep for the specified delay
    */
   void sendWithDataMessage(dataMessage) {
     try {
+      if (hasProperty("listener") && listener?.delay) Thread.sleep(listener.delay) 
       def scopes = buildScopes(dataMessage)
       log.trace "scopes built. getting recipients"
       getRecipients(dataMessage).each { recipient ->

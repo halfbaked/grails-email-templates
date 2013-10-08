@@ -27,7 +27,16 @@ Defining an email template, you must provide a number of attributes and function
 * *Map dataKeys()* -  A map of data keys illustrating what data can be injected into the body of the email template
 * *getRecipients(dataMessage)* - Retrieves the recipients for this email, given the original dataMessage. 
 * *buildTestDataMessage* - Builds a test data message. This is very useful when testing email templates work, and how they look.
-* *listener (optional)* - defines an event that the emailTemplate will be sent on. For this reason, Email Templates depends on the event functionality of Platform Core.
+* listener (optional)* - defines an event that the emailTemplate will be sent on. For this reason, Email Templates depends on the event functionality of Platform Core.
+
+Event Driven Email Templates
+----------------------------
+You can define a listener map in your emailTemplate class that will indicate the event the email should be sent on. You can also define the namespace of that event, and whether to 
+wait a specified period of time after the event has been fired before sending the email.
+
+Example:
+    def listener = [topic: "passwordResetRequested", namespace: "emailTemplates", delay:3000 /* wait 3 seconds */]
+
 
 User Interface
 --------------
