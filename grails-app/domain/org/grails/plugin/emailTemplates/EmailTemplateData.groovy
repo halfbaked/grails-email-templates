@@ -15,7 +15,7 @@ class EmailTemplateData {
   String bccEmails
   Locale locale 
   Boolean defaultForCode = false
-  Boolean enabled = true
+  Boolean enabled = false
   EmailTemplateLayout layout
 
   static constraints = {

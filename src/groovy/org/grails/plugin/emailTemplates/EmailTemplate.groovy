@@ -48,12 +48,16 @@ abstract class EmailTemplate {
   def mustache
   def sessionFactory
 
+  // Email templates can be enabled/disabled on a number of different levels
+  // At the email template data level, and the emailTemplate artifact itself
+  // Only at the email template data level it is persisted
+
   /* 
    * If a listener Map is defined, the emailTemplate will become event driven, listening for the event, and sending the email.
    */
 
   def sendEmail(String recipientEmail, def scopes, def emailTemplateData) {
-    log.info "Sending email recipient $recipientEmail, scopes $scopes, subject: ${emailTemplateData?.subject}"
+    log.info "EmailTemplate[$name] sendEmail with recipient[$recipientEmail] and subject[${emailTemplateData?.subject}] and scopes $scopes"    
     sessionFactory?.currentSession?.setFlushMode(FlushMode.COMMIT)
     if (!recipientEmail || !emailTemplateData) {
       log.warn """
@@ -88,7 +92,7 @@ abstract class EmailTemplate {
         html body
         if(bccEmailsArray){ bcc bccEmailsArray }
       }
-      log.info "Email sent to $recipientEmail"
+      log.info "EmailTemplate[$name] sent to $recipientEmail"
     } catch (e) {
       log.error("error sending email $name", e)
     }
@@ -107,8 +111,13 @@ abstract class EmailTemplate {
    * If the listener map defined a delay, the thread will sleep for the specified delay
    */
   void sendWithDataMessage(dataMessage) {
+    if (!isEnabled()) return
     try {
-      if (hasProperty("listener") && listener?.delay) Thread.sleep(listener.delay) 
+      if (hasProperty("listener") && listener && listener.delay) { 
+        log.trace "EmailTemplate[$name] pausing for $listener.delay ms"
+        Thread.sleep(listener.delay) 
+      } else { "no delay specified. No sleeping" }
+
       def scopes = buildScopes(dataMessage)
       log.trace "scopes built. getting recipients"
       getRecipients(dataMessage).each { recipient ->
@@ -117,14 +126,10 @@ abstract class EmailTemplate {
           sendEmail(recipient.email, scopes, getTemplateData(recipient.locale))
         }
       }
+    } catch (java.lang.InterruptedException ie) { 
+      log.warn "EmailTemplate[$name] sleep interupted"
     } catch (e) {
-      log.error """
-        Error: exception in send $e 
-        $e.stackTrace
-        $e.message
-        $e.cause
-      """  
-      log.error("Error sending email $name",e)
+      log.error "EmailTemplate[$name] exception in sendWithDataMessage $e.message", e  
       //throw(e)
     }
   }
@@ -139,6 +144,22 @@ abstract class EmailTemplate {
     else if (locale?.variant) return getTemplateData(new Locale(locale.getLanguage(), locale.getCountry()))    
     else if (locale?.country) return getTemplateData(new Locale(locale.getLanguage()))
     else return EmailTemplateData.findEnabledByCodeAndDefaultForCode(getEmailCode(), true)    
+  }
+
+  def enableAllTemplateDatas() {
+    EmailTemplateData.withNewTransaction {
+      getAllTemplateDatas().each { it.enabled = true }
+    }
+  }
+
+  def disableAllTemplateDatas() {
+    EmailTemplateData.withNewTransaction {
+      getAllTemplateDatas().each { it.enabled = false }
+    }
+  }
+
+  def getAllTemplateDatas(){
+    EmailTemplateData.findAllByCode(getEmailCode())
   }
 
   /*
@@ -162,7 +183,7 @@ abstract class EmailTemplate {
     new EmailTemplateData().withTransaction {
       if (!EmailTemplateData.findByCode(getEmailCode())) {      
         createDefaultTemplate().save(failOnError:true, flush:true)
-        log.debug "EmailTemplateData [${getEmailCode()}] did not exist. Persisting"      
+        log.trace "EmailTemplateData [${getEmailCode()}] did not exist. Persisting"      
       } 
     }
   }
@@ -173,6 +194,14 @@ abstract class EmailTemplate {
       .compile(reader, "mustacheOutput")
       .execute(writer, scopes)
     writer.buffer.toString()
+  }
+
+  /* 
+   * Determines if the email template is enabled. This saves the template for unnecessary processing.
+   * Currently whether the email template is enabled or not is determined by whether any email templates are available
+   */
+  def isEnabled() {
+    EmailTemplateData.countByCode(getEmailCode()) > 0
   }
 
   /* 
