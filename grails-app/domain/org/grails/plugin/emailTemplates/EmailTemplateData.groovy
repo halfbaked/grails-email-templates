@@ -15,7 +15,7 @@ class EmailTemplateData {
   String bccEmails
   Locale locale 
   Boolean defaultForCode = false
-  Boolean enabled = false
+  Boolean enabled = true 
   EmailTemplateLayout layout
 
   static constraints = {
@@ -39,6 +39,18 @@ class EmailTemplateData {
 
   EmailTemplateData clone() {
     return new EmailTemplateData(code:code, subject:subject, body:body, name:name, locale:null)
+  }
+
+  def static disableAll(){
+    EmailTemplateData.withNewTransaction {
+      EmailTemplateData.list().each { it.enabled = false }
+    }
+  }
+
+  def static enableAll(){
+    EmailTemplateData.withNewTransaction {
+      EmailTemplateData.list().each { it.enabled = true }
+    }
   }
 
 }
