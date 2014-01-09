@@ -199,9 +199,10 @@ abstract class EmailTemplate {
   /* 
    * Determines if the email template is enabled. This saves the template for unnecessary processing.
    * Currently whether the email template is enabled or not is determined by whether any email templates are available
+   * and enabled
    */
   def isEnabled() {
-    EmailTemplateData.countByCode(getEmailCode()) > 0
+    EmailTemplateData.countByCodeAndEnabled(getEmailCode(), true) > 0
   }
 
   /* 
