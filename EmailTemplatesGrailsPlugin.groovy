@@ -4,7 +4,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.14"
+  def version = "0.16"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
