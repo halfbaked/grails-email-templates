@@ -11,6 +11,11 @@ grails.project.dependency.resolution = {
   repositories {
     grailsCentral()
     mavenCentral()
+		mavenLocal()
+    grailsPlugins()
+    grailsHome()
+    mavenRepo "http://maven.springframework.org/milestone/"
+    mavenRepo "https://oss.sonatype.org/content/repositories/releases/"
   }
   dependencies {
     runtime 'org.pegdown:pegdown:1.1.0',
@@ -20,24 +25,24 @@ grails.project.dependency.resolution = {
   }
 
   plugins {
-    compile(":tomcat:$grailsVersion",
+    compile(":tomcat:7.0.42",
           ":release:2.0.3",
           ":rest-client-builder:1.0.2") {
+			excludes "spring-test"
       export = false
     }
 
-    test(":spock:0.7", ":greenmail:1.3.3", ":code-coverage:1.2.5"){
+    test(":greenmail:1.3.3", ":code-coverage:1.2.5"){
       export = false
     }
 
     // Build test data is a handy way of building the TestDataMessage,
     // but other projects don't have to use it.
-    compile(":build-test-data:2.0.3") { export = false }
-    compile ":mail:1.0"   
-    compile ":platform-core:1.0.RC5"
-    runtime ":hibernate:$grailsVersion"
+    compile(":build-test-data:2.0.8") { export = false }
+    compile (":mail:1.0.1", ":platform-core:1.0.RC5") { excludes "spring-test" }
+    runtime ":hibernate:3.6.10.6"
 
-    compile ":resources:1.2.RC3" 
+//    compile ":resources:1.2.RC3" 
   }
 }
 
