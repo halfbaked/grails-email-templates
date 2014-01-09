@@ -55,7 +55,6 @@ abstract class EmailTemplate {
   /* 
    * If a listener Map is defined, the emailTemplate will become event driven, listening for the event, and sending the email.
    */
-
   def sendEmail(String recipientEmail, def scopes, def emailTemplateData) {
     log.info "EmailTemplate[$name] sendEmail with recipient[$recipientEmail] and subject[${emailTemplateData?.subject}] and scopes $scopes"    
     sessionFactory?.currentSession?.setFlushMode(FlushMode.COMMIT)
@@ -85,12 +84,16 @@ abstract class EmailTemplate {
 
     body = ensureIsFullHtmlDocument(body)
 
+		def attachments = getAttachments()
     try {
       mailService.sendMail {
         to recipientEmail
         subject emailTemplateData.subject
         html body
         if(bccEmailsArray){ bcc bccEmailsArray }
+				attachments.each { attachment ->
+				  attach attachment.name, attachment.type, attachment.bytes
+				}
       }
       log.info "EmailTemplate[$name] sent to $recipientEmail"
     } catch (e) {
@@ -212,6 +215,11 @@ abstract class EmailTemplate {
   def getEmailCode() {
     this.class.name
   }
+
+	// Default implementation, so that subclasses are not required to implement it
+	def getAttachments(data) {
+		[]
+	}
 
   static Boolean isEmail(String email) {
     email ==~ /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,4}/

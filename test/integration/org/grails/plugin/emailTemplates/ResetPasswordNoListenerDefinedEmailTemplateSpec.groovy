@@ -3,12 +3,11 @@ package org.grails.plugin.emailTemplates
 
 import org.grails.plugin.emailTemplates.test.EmailTemplatesPerson
 
-import grails.plugin.spock.IntegrationSpec
 import groovy.mock.interceptor.MockFor
 import com.icegreen.greenmail.util.*
 
 
-class ResetPasswordNoListenerDefinedEmailTemplateSpec extends IntegrationSpec {
+class ResetPasswordNoListenerDefinedEmailTemplateSpec extends grails.test.spock.IntegrationSpec {
 
   def greenMail
   def resetPasswordNoListenerDefinedEmailTemplate
