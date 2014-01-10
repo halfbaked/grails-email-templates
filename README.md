@@ -8,7 +8,7 @@ Installation
 
 Install this plugin by placing the appropriate line in the BuildConfig of your project
 
-  compile ":email-templates:0.1"
+  compile ":email-templates:0.16"
 
 Getting Started
 ---------------
@@ -41,3 +41,7 @@ Example:
 User Interface
 --------------
 There is a user interface for this plugin available as a separate plugin called email-templates-ui.
+
+Attachments
+-----------
+You can specify how to build attachments for a particular email template by overriding the getAttachments(data) method.

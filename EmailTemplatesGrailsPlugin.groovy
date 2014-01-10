@@ -4,7 +4,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.16"
+  def version = "0.18"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
@@ -12,6 +12,7 @@ class EmailTemplatesGrailsPlugin {
 
   def pluginExcludes = [
     "grails-app/emailTemplates/org/grails/plugin/emailTemplates/ResetPasswordEmailTemplate.groovy",
+    "grails-app/emailTemplates/org/grails/plugin/emailTemplates/AttachmentEmailTemplate.groovy",
     "grails-app/emailTemplates/org/grails/plugin/emailTemplates/ResetPasswordNoListenerDefinedEmailTemplate.groovy",
     "grails-app/domain/org/grails/plugin/emailTemplates/test/*",
     "grails-app/conf/TestDataConfig.groovy"

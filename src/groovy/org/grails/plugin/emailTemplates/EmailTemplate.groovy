@@ -55,7 +55,7 @@ abstract class EmailTemplate {
   /* 
    * If a listener Map is defined, the emailTemplate will become event driven, listening for the event, and sending the email.
    */
-  def sendEmail(String recipientEmail, def scopes, def emailTemplateData) {
+  def sendEmail(String recipientEmail, def scopes, def emailTemplateData, def attachments = null) {
     log.info "EmailTemplate[$name] sendEmail with recipient[$recipientEmail] and subject[${emailTemplateData?.subject}] and scopes $scopes"    
     sessionFactory?.currentSession?.setFlushMode(FlushMode.COMMIT)
     if (!recipientEmail || !emailTemplateData) {
@@ -84,16 +84,16 @@ abstract class EmailTemplate {
 
     body = ensureIsFullHtmlDocument(body)
 
-		def attachments = getAttachments()
     try {
       mailService.sendMail {
+        if(attachments) multipart true
         to recipientEmail
         subject emailTemplateData.subject
         html body
         if(bccEmailsArray){ bcc bccEmailsArray }
-				attachments.each { attachment ->
-				  attach attachment.name, attachment.type, attachment.bytes
-				}
+        attachments?.each { attachment ->
+          if(attachment.bytes) attach attachment.name, attachment.type, attachment.bytes
+        }
       }
       log.info "EmailTemplate[$name] sent to $recipientEmail"
     } catch (e) {
@@ -123,10 +123,11 @@ abstract class EmailTemplate {
 
       def scopes = buildScopes(dataMessage)
       log.trace "scopes built. getting recipients"
+      def attachments = getAttachments(dataMessage)
       getRecipients(dataMessage).each { recipient ->
         def templateData = getTemplateData(recipient.locale)
         if (templateData) {
-          sendEmail(recipient.email, scopes, getTemplateData(recipient.locale))
+          sendEmail(recipient.email, scopes, getTemplateData(recipient.locale), attachments)
         }
       }
     } catch (java.lang.InterruptedException ie) { 
