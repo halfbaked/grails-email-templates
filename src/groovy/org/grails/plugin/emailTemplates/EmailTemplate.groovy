@@ -56,7 +56,9 @@ abstract class EmailTemplate {
    * If a listener Map is defined, the emailTemplate will become event driven, listening for the event, and sending the email.
    */
   def sendEmail(String recipientEmail, def scopes, def emailTemplateData, def attachments = null) {
-    log.info "EmailTemplate[$name] sendEmail with recipient[$recipientEmail] and subject[${emailTemplateData?.subject}] and scopes $scopes"    
+    log.info "EmailTemplate[$name] sendEmail with recipient[$recipientEmail] and subject[${emailTemplateData?.subject}]"        
+    log.trace "EmailTemplate[$name] sendEmail with recipient[$recipientEmail] and subject[${emailTemplateData?.subject}] and scopes $scopes"    
+
     sessionFactory?.currentSession?.setFlushMode(FlushMode.COMMIT)
     if (!recipientEmail || !emailTemplateData) {
       log.warn """
