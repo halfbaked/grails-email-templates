@@ -28,18 +28,18 @@ abstract class EmailTemplate {
   abstract Map dataKeys()
 
   /*
-   * Retrieves the recipients for this email, given the original dataMessage. 
+   * Retrieves the recipients for this email, given the original dataMessage.
    * It can return a string, or an array of strings.
    */
   abstract getRecipients(dataMessage)
 
-  /* 
+  /*
    * Builds a test data message. This is very useful when testing email templates work, and how they look.
    */
   abstract buildTestDataMessage()
 
-  /* 
-   * Build the data that will be available to the email template when it will be processed 
+  /*
+   * Build the data that will be available to the email template when it will be processed
    */
   abstract Map buildScopes(dataMessage)
 
@@ -52,16 +52,16 @@ abstract class EmailTemplate {
   // At the email template data level, and the emailTemplate artifact itself
   // Only at the email template data level it is persisted
 
-  /* 
+  /*
    * If a listener Map is defined, the emailTemplate will become event driven, listening for the event, and sending the email.
    */
   def sendEmail(String recipientEmail, def scopes, def emailTemplateData, def attachments = null) {
-    log.trace "EmailTemplate[$name] sendEmail with recipient[$recipientEmail] and subject[${emailTemplateData?.subject}] and scopes $scopes"    
+    log.trace "EmailTemplate[$name] sendEmail with recipient[$recipientEmail] and subject[${emailTemplateData?.subject}] and scopes $scopes"
 
     sessionFactory?.currentSession?.setFlushMode(FlushMode.COMMIT)
     if (!recipientEmail || !emailTemplateData) {
       log.warn """
-        Could not send mail. Invalid arguments. 
+        Could not send mail. Invalid arguments.
         recipientEmail: $recipientEmail
         emailTemplateData: $emailTemplateData
       """
@@ -76,11 +76,11 @@ abstract class EmailTemplate {
     def layout = emailTemplateData.layout ?: EmailTemplateLayout.findByDefaultLayout(true)
     if (layout) {
       def engine = new SimpleTemplateEngine()
-      body = engine.createTemplate(layout.body).make([emailContent: emailTemplateData.body]).toString()      
+      body = engine.createTemplate(layout.body).make([emailContent: emailTemplateData.body]).toString()
     } else {
       body = emailTemplateData.body
     }
-    
+
     body = compileMustache(new StringReader(body), scopes)
 
     body = ensureIsFullHtmlDocument(body)
@@ -101,7 +101,7 @@ abstract class EmailTemplate {
       log.error("error sending email $name", e)
     }
   }
-  
+
   /*
    * Sends the test email
    */
@@ -110,16 +110,16 @@ abstract class EmailTemplate {
     sendEmail(recipient, buildScopes(dataMessage), emailTemplateData)
   }
 
-  /* 
+  /*
    * Sends an email given only the dataMessage. It will build everything else from the methods defined in the subclasses.
    * If the listener map defined a delay, the thread will sleep for the specified delay
    */
   void sendWithDataMessage(dataMessage) {
     if (!isEnabled()) return
     try {
-      if (hasProperty("listener") && listener && listener.delay) { 
+      if (hasProperty("listener") && listener && listener.delay) {
         log.trace "EmailTemplate[$name] pausing for $listener.delay ms"
-        Thread.sleep(listener.delay) 
+        Thread.sleep(listener.delay)
       } else { "no delay specified. No sleeping" }
 
       def scopes = buildScopes(dataMessage)
@@ -131,24 +131,24 @@ abstract class EmailTemplate {
           sendEmail(recipient.email, scopes, getTemplateData(recipient.locale), attachments)
         }
       }
-    } catch (java.lang.InterruptedException ie) { 
+    } catch (java.lang.InterruptedException ie) {
       log.warn "EmailTemplate[$name] sleep interupted"
     } catch (e) {
-      log.error "EmailTemplate[$name] exception in sendWithDataMessage $e.message", e  
+      log.error "EmailTemplate[$name] exception in sendWithDataMessage $e.message", e
       //throw(e)
     }
   }
 
   /*
-   * Returns the persisted email template data from the database. Persisting this data to the database allows users to easily 
+   * Returns the persisted email template data from the database. Persisting this data to the database allows users to easily
    * customize the email templates
    */
   def getTemplateData(Locale locale=null) {
     def emailTemplateData = EmailTemplateData.findEnabledByCodeAndLocale(getEmailCode(), locale)
     if (emailTemplateData) return emailTemplateData
-    else if (locale?.variant) return getTemplateData(new Locale(locale.getLanguage(), locale.getCountry()))    
+    else if (locale?.variant) return getTemplateData(new Locale(locale.getLanguage(), locale.getCountry()))
     else if (locale?.country) return getTemplateData(new Locale(locale.getLanguage()))
-    else return EmailTemplateData.findEnabledByCodeAndDefaultForCode(getEmailCode(), true)    
+    else return EmailTemplateData.findEnabledByCodeAndDefaultForCode(getEmailCode(), true)
   }
 
   def enableAllTemplateDatas() {
@@ -168,16 +168,17 @@ abstract class EmailTemplate {
   }
 
   /*
-   * Builds default template data object. 
+   * Builds default template data object.
    */
-  def createDefaultTemplate() {   
+  def createDefaultTemplate() {
     new EmailTemplateData(
       code: getEmailCode(),
       name: name,
       subject: subject,
       body: body,
+      enabled: isEnabledByDefault(),
       defaultForCode: true
-    )    
+    )
   }
 
   /*
@@ -186,10 +187,10 @@ abstract class EmailTemplate {
    */
   def persistEmailTemplateDataIfDoesNotExist(){
     new EmailTemplateData().withTransaction {
-      if (!EmailTemplateData.findByCode(getEmailCode())) {      
+      if (!EmailTemplateData.findByCode(getEmailCode())) {
         createDefaultTemplate().save(failOnError:true, flush:true)
-        log.trace "EmailTemplateData [${getEmailCode()}] did not exist. Persisting"      
-      } 
+        log.trace "EmailTemplateData [${getEmailCode()}] did not exist. Persisting"
+      }
     }
   }
 
@@ -201,7 +202,7 @@ abstract class EmailTemplate {
     writer.buffer.toString()
   }
 
-  /* 
+  /*
    * Determines if the email template is enabled. This saves the template for unnecessary processing.
    * Currently whether the email template is enabled or not is determined by whether any email templates are available
    * and enabled
@@ -210,7 +211,7 @@ abstract class EmailTemplate {
     EmailTemplateData.countByCodeAndEnabled(getEmailCode(), true) > 0
   }
 
-  /* 
+  /*
    * Returns the unique identifier for a particular email template. This is used to associate the email template with
    * a particular EmailTemplateData.
    */
@@ -222,6 +223,12 @@ abstract class EmailTemplate {
 	def getAttachments(data) {
 		[]
 	}
+
+  // An email template can override this method to specify this email template
+  // should be set to disabled by default
+  def isEnabledByDefault() {
+    true
+  }
 
   static Boolean isEmail(String email) {
     email ==~ /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,4}/

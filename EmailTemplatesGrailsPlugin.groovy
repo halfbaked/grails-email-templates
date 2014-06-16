@@ -4,7 +4,7 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException
 
 class EmailTemplatesGrailsPlugin {
 
-  def version = "0.20"
+  def version = "0.21"
   def grailsVersion = "2.0 > *"
 
   // the other plugins this plugin depends on
@@ -18,7 +18,7 @@ class EmailTemplatesGrailsPlugin {
     "grails-app/conf/TestDataConfig.groovy"
   ]
 
-  def title = "Email Templates" 
+  def title = "Email Templates"
   def author = "Eamonn O'Connell"
   def authorEmail = "@34m0"
   def description = '''
@@ -34,9 +34,9 @@ class EmailTemplatesGrailsPlugin {
   def watchedResources = "field:./grails-app/emailTemplates/**/*EmailTemplate.groovy"
   def artefacts = [ EmailTemplateArtefactHandler ]
 
-  def doWithSpring = { ctx ->       
+  def doWithSpring = { ctx ->
     def disabledEmailTemplates = application.config.grails?.plugin?.emailTemplates?.disabledEmailTemplates
-    application.emailTemplateClasses.each { emailTemplateClass ->           
+    application.emailTemplateClasses.each { emailTemplateClass ->
       if (emailTemplateClass.isAbstract()) return
       def beanName = emailTemplateClass.fullName
       def shortBeanName = generateShortBeanNameFromClass(emailTemplateClass)
@@ -45,9 +45,9 @@ class EmailTemplatesGrailsPlugin {
           bean.autowire = true
           mustache = new com.github.mustachejava.DefaultMustacheFactory()
         }
-        springConfig.addAlias shortBeanName, beanName 
+        springConfig.addAlias shortBeanName, beanName
       }
-    }      
+    }
   }
 
   def doWithApplicationContext = { appCtx ->
@@ -59,7 +59,7 @@ class EmailTemplatesGrailsPlugin {
         def emailTemplate = appCtx.getBean(beanName)
         emailTemplate.persistEmailTemplateDataIfDoesNotExist()
         def listener = emailTemplate.hasProperty("listener") ? emailTemplate.listener : null
-        if (listener && listener.topic) { 
+        if (listener && listener.topic) {
           def sendMethod = emailTemplate.class.methods.find { it.name =~ /^sendWithDataMessage$/ }
           appCtx.grailsEventsRegistry.on (listener.namespace, listener.topic, emailTemplate, sendMethod)
         }
@@ -70,7 +70,7 @@ class EmailTemplatesGrailsPlugin {
   }
 
   def doWithDynamicMethods = { ctx ->
-  
+
     try {
       for (domainClass in application.domainClasses) {
          domainClass.metaClass.static.dataKeys = {
@@ -80,11 +80,11 @@ class EmailTemplatesGrailsPlugin {
     } catch (Exception e){
       println "Error $e"
     }
-    
+
   }
 
   def onChange = { event ->
-  
+
     if(application.isArtefactOfType(EmailTemplateArtefactHandler.TYPE, event.source)) {
       def oldClass = application.getEmailTemplateClass(event.source.name)
       application.addArtefact(EmailTemplateArtefactHandler.TYPE, event.source)
@@ -96,7 +96,7 @@ class EmailTemplatesGrailsPlugin {
         }
       }
     }
-    
+
   }
 
   def doWithConfigOptions = {
@@ -110,5 +110,5 @@ class EmailTemplatesGrailsPlugin {
   private generateBeanNameFromClass(def clazz) {
     clazz.fullName
   }
- 
+
 }
