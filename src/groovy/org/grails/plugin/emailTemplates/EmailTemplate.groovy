@@ -226,7 +226,7 @@ abstract class EmailTemplate {
 
   // An email template can override this method to specify this email template
   // should be set to disabled by default
-  def isEnabledByDefault() {
+  Boolean isEnabledByDefault() {
     true
   }
 
