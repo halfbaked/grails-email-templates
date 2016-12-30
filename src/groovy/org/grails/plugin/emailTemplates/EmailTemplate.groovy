@@ -48,7 +48,6 @@ abstract class EmailTemplate {
 	def mustache
 	def sessionFactory
 
-	def grailsEvents
 
 	// Email templates can be enabled/disabled on a number of different levels
 	// At the email template data level, and the emailTemplate artifact itself
@@ -108,14 +107,12 @@ abstract class EmailTemplate {
 						}
 					}
 					log.info "EmailTemplate[$name] sent to $recipientEmail"
-				} catch(Throwable t){
-					grailsEvents.event('savp','notification', [title: "Mail failed", description: body, type:"Error", usernames:[recipientEmail]])
+				} catch(Throwable t){					
 					log.error("error sending email $name", t)
 				}
 			} as Runnable)
 			
-		} catch (e) {
-			grailsEvents.event('savp','notification', [title: "Mail failed", description: body, type:"Error", usernames:[recipientEmail]])
+		} catch (e) {			
 			log.error("error sending email $name", e)
 		}
 	}
@@ -134,6 +131,7 @@ abstract class EmailTemplate {
 	 * If the listener map defined a delay, the thread will sleep for the specified delay
 	 */
 	void sendWithDataMessage(dataMessage) {
+		log.trace "sendWithDataMessage invoked with dataMessage >> $dataMessage"
 		if (!isEnabled()) return
 			try {
 				if (hasProperty("listener") && listener && listener.delay) {
@@ -141,13 +139,16 @@ abstract class EmailTemplate {
 					Thread.sleep(listener.delay)
 				} else { "no delay specified. No sleeping" }
 
+				if(!dataMessage['_TENANT_PK_ID'])
+					throw new Exception("Mail event recieved without _TENANT_PK_ID data!")
+
 				def scopes = buildScopes(dataMessage)
 				log.trace "scopes built. getting recipients"
 				def attachments = getAttachments(dataMessage)
 				getRecipients(dataMessage).each { recipient ->
-					def templateData = getTemplateData(recipient.locale)
+					def templateData = getTemplateData(recipient.locale, dataMessage['_TENANT_PK_ID'])
 					if (templateData) {
-						sendEmail(recipient.email, scopes, getTemplateData(recipient.locale), attachments)
+						sendEmail(recipient.email, scopes, getTemplateData(recipient.locale, dataMessage['_TENANT_PK_ID']), attachments)
 					}
 				}
 			} catch (java.lang.InterruptedException ie) {
@@ -162,12 +163,12 @@ abstract class EmailTemplate {
 	 * Returns the persisted email template data from the database. Persisting this data to the database allows users to easily
 	 * customize the email templates
 	 */
-	def getTemplateData(Locale locale=null) {
-		def emailTemplateData = EmailTemplateData.findEnabledByCodeAndLocale(getEmailCode(), locale)
+	def getTemplateData(Locale locale=null, long tenantId) {
+		def emailTemplateData = EmailTemplateData.findEnabledByCodeAndLocaleAndTenantId(getEmailCode(), locale, tenantId)
 		if (emailTemplateData) return emailTemplateData
-		else if (locale?.variant) return getTemplateData(new Locale(locale.getLanguage(), locale.getCountry()))
-		else if (locale?.country) return getTemplateData(new Locale(locale.getLanguage()))
-		else return EmailTemplateData.findEnabledByCodeAndDefaultForCode(getEmailCode(), true)
+		else if (locale?.variant) return getTemplateData(new Locale(locale.getLanguage(), locale.getCountry()), tenantId)
+		else if (locale?.country) return getTemplateData(new Locale(locale.getLanguage()), tenantId)
+		else return EmailTemplateData.findEnabledByCodeAndDefaultForCodeAndTenantId(getEmailCode(), true, tenantId)
 	}
 
 	def enableAllTemplateDatas() {
