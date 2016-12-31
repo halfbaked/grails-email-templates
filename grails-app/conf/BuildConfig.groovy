@@ -44,9 +44,10 @@ grails.project.dependency.resolution = {
     // Build test data is a handy way of building the TestDataMessage,
     // but other projects don't have to use it.
     compile(":build-test-data:2.0.8") { export = false }
-    compile (":mail:1.0.1", ":platform-core:1.0.RC5") { excludes "spring-test" }
+    compile (":mail:1.0.7", ":platform-core:1.0.0") { excludes "spring-test" }
     runtime ":hibernate:3.6.10.6"
 
+    compile "org.grails.plugins:multi-tenant-single-db:1.01"
   }
 
 }

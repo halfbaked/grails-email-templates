@@ -1,6 +1,8 @@
 package org.grails.plugin.emailTemplates
 
+import grails.plugin.multitenant.core.annotation.MultiTenant
 
+@MultiTenant
 class EmailTemplateLayout {
 
   def grailsApplication
